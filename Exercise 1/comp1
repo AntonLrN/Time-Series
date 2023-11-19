@@ -1,0 +1,97 @@
+notes:
+REMOVING SEASON: WHITENESS TEST PASSED
+Discrete-time ARMA model: A(z)y(t) = C(z)e(t)                                 
+  A(z) = 1 - 1.528 (+/- 0.03155) z^-1 + 0.7365 (+/- 0.0318) z^-2              
+                                                                              
+  C(z) = 1 - 0.4071 (+/- 0.04261) z^-12                                       
+                                                                              
+Sample time: 1 seconds                                                        
+                                                                              
+Parameterization:                                                             
+   Polynomial orders:   na=2   nc=12                                          
+   Number of free coefficients: 3                                             
+   Use "polydata", "getpvec", "getcov" for parameters and their uncertainties.
+                                                                              
+Status:                                                                       
+Termination condition: Near (local) minimum, (norm(g) < tol)..                
+Number of iterations: 4, Number of function evaluations: 9                    
+                                                                              
+Estimated using PEM on time domain data "datays".                             
+Fit to estimation data: 69.19% (prediction focus)                             
+FPE: 0.9196, MSE: 0.9084
+
+
+NOT REMOVING SEASON: WHITENESS TEST PASSED
+Discrete-time ARMA model: A(z)y(t) = C(z)e(t)                                                                   
+                                                                                                                
+  A(z) = 1 - 1.515 (+/- 0.03393) z^-1 + 0.7261 (+/- 0.03413) z^-2 - 0.9904 (+/- 0.01016) z^-12 + 1.504 (        
+                                                                 +/- 0.03787) z^-13 - 0.7174 (+/- 0.03571) z^-14
+                                                                                                                
+  C(z) = 1 - 0.3719 (+/- 0.04562) z^-12                                                                         
+                                                                                                                
+Sample time: 1 seconds                                                                                          
+                                                                                                                
+Parameterization:                                                                                               
+   Polynomial orders:   na=14   nc=12                                                                           
+   Number of free coefficients: 6                                                                               
+   Use "polydata", "getpvec", "getcov" for parameters and their uncertainties.                                  
+                                                                                                                
+Status:                                                                                                         
+Termination condition: Near (local) minimum, (norm(g) < tol)..                                                  
+Number of iterations: 6, Number of function evaluations: 13                                                     
+                                                                                                                
+Estimated using PEM on time domain data "datay".                                                                
+Fit to estimation data: 86.41% (prediction focus)                                                               
+FPE: 1.086, MSE: 1.061       
+
+
+3 
+
+
+Got lower FPE by not differentiating. 
+
+For a1, a2, c24 with diff i get (not white):
+Discrete-time ARMA model: A(z)y(t) = C(z)e(t)                                 
+  A(z) = 1 - 1.362 (+/- 0.02625) z^-1 + 0.4252 (+/- 0.02631) z^-2             
+                                                                              
+  C(z) = 1 - 0.7054 (+/- 0.01963) z^-24                                       
+                                                                              
+Sample time: 1 seconds                                                        
+                                                                              
+Parameterization:                                                             
+   Polynomial orders:   na=2   nc=24                                          
+   Number of free coefficients: 3                                             
+   Use "polydata", "getpvec", "getcov" for parameters and their uncertainties.
+                                                                              
+Status:                                                                       
+Termination condition: Near (local) minimum, (norm(g) < tol)..                
+Number of iterations: 5, Number of function evaluations: 11                   
+                                                                              
+Estimated using PEM on time domain data.                                      
+Fit to estimation data: 73.65% (prediction focus)                             
+FPE: 0.4303, MSE: 0.4284   
+
+
+WITHOUT DIFFERENTIATING:
+I WILL GET LOWER FPE(STILL NOT WHITE, BUT ALL COEFFS SIGNFICANT):
+                                                                                                                
+  A(z) = 1 - 1.528 (+/- 0.02784) z^-1 + 0.622 (+/- 0.05087) z^-2 - 0.1299 (+/- 0.05093) z^-3 + 0.1128 (+        
+                                                                                                /- 0.02792) z^-4
+                                                                                                                
+  C(z) = 1 + 0.1494 (+/- 0.02747) z^-23 + 0.1164 (+/- 0.02741) z^-24 + 0.143 (+/- 0.02718) z^-25                
+                                                                                                                
+Sample time: 1 seconds                                                                                          
+                                                                                                                
+Parameterization:                                                                                               
+   Polynomial orders:   na=10   nc=25                                                                           
+   Number of free coefficients: 7                                                                               
+   Use "polydata", "getpvec", "getcov" for parameters and their uncertainties.                                  
+                                                                                                                
+Status:                                                                                                         
+Termination condition: Near (local) minimum, (norm(g) < tol)..                                                  
+Number of iterations: 5, Number of function evaluations: 11                                                     
+                                                                                                                
+Estimated using PEM on time domain data "datas".                                                                
+Fit to estimation data: 81.94% (prediction focus)                                                               
+FPE: 0.3696, MSE: 0.3658                                                                                        
+More information in model's "Report" property. 

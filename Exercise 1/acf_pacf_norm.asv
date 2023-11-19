@@ -1,0 +1,7 @@
+%% ACF function and plot
+function [autocorr,pautocorr] = acf_pacf_norm(y1)
+    [autocorr, lag], = acf(y1,20)
+    pautocorr = pacf(y1,20)
+    norm = normplot(y1)
+    plot(auto)
+end
