@@ -5,24 +5,18 @@ load("svedala.mat")
 load("data.dat")
 load("noise.dat")
 %% Polynomials 
-A1 = [ 1 -1.79 0.84 ] ;
-C1 = [ 1 -0.18 -0.11 ] ;
+A1 = [ 1 -1.79 0.84 ];
+C1 = [ 1 -0.18 -0.11 ];
 
-A2 = [ 1 -1.79 ] ;
-C2 = [ 1 -0.18 -0.11 ] ;
+A2 = [ 1 -1.79 ];
+C2 = [ 1 -0.18 -0.11 ];
 
-% Polynomials should probably be these (?):
-% A1 = [ 1 1.79 0.84 ] ;
-% C1 = [ 1 0.18 0.11 ] ;
-% 
-% A2 = [ 1 1.79 ] ;
-% C2 = [ 1 0.18 0.11 ] ;
 %% #Create the ARMA using A1 and C1, (and A2 and C2 respectively). 
 ARMA1 = idpoly( A1, [ ] , C1 );
 ARMA2 = idpoly( A2, [ ] , C2 );
 
 %% plot
-pzmap(ARMA1)
+pzmap(ARMA2)
 %% set seed 
 
 rng(0)
@@ -68,7 +62,7 @@ stem( 0:m, r_est1, 'r' )
 
 %% Try Different order ARs:
 data_y1= iddata(y1);
-ar2 = arx(data_y1, 3);
+ar2 = arx(data_y1, 2);
 error_ar1 =MyFilter(ar2.A,ar2.C,y1);
 [autocorrAR,pautocorrAR]=acf_pacf_norm(error_ar1);
 %%
@@ -106,10 +100,9 @@ rar3=resid(armod3,data);
 rar4=resid(armod4,data); 
 rar5=resid(armod5,data);
 %% (we can see that AR2 is not quite white, but AR3 is). 
-acf_pacf_norm(rar2.y)
-whitenessTest(rar2.y)
+acf_pacf_norm(rar3.y)
+whitenessTest(rar3.y)
 %% Plot noise vs residuals:
-cutoff = 10
 subplot(611)
 plot(noise.y(cutoff:end))
 subplot(612)
@@ -134,16 +127,16 @@ rarm1=resid(arma11, data);
 rarm2=resid(arma12,data);
 rarm3=resid(arma21, data);
 rarm4=resid(arma22,data); 
-
-acf_pacf_norm(rarm1.y(cutoff:end))
-whitenessTest(rarm1.y(cutoff:end))
+%QUESTION: Should i have a cutoff here?
+acf_pacf_norm(rarm1.y(2:end));
+whitenessTest(rarm1.y(2:end));
 
 % Conclusion: Since both arma11 and armod 3 are valid, id choose the one
 % with the lowest FPE (arma11)
 
 %% 2.3 Simulate arma data and try to deal with seasonality
 rng( 0 )
-N=10000
+N=600
 A = [ 1 -1.5 0.7 ] ;
 C = [ 1 zeros(1 , 11) -0.5] ;
 A12 = [ 1 zeros( 1 , 11 ) -1] ;
@@ -177,7 +170,7 @@ whitenessTest(resid2.y(length(modelinit.A):end))
 
 %NN
 
-%% Create an init model (AR) - not remoed seasonal dependence
+%% Create an init model (AR) - not remoed seasonal dependence (rel)
 datay=iddata(y)
 A = [1,  zeros(1 , 14)] % Had to include alot of coeffecicients to get a good FPE, but all coeffs signif.
 B=[]
@@ -186,38 +179,18 @@ C = [ 1 zeros(1 , 12) ]
 model_init = idpoly(A,B,C) ;
 model_init.structure.a.Free = [ 1  1 1 zeros(1 , 9) 1 1 1 ] ;
 model_init.structure.c.Free = [ zeros(1 , 12) 1] ;
-model_armax_nrs = pem( datay , model_init )
+model_armax_nrs = pem( datay , model_init )<
 
 
-%% Residual of armax
+%% Residual of armax (above) (rel
 error_armax_nrs = resid(model_armax_nrs,datay)
 acf_pacf_norm(error_armax_nrs.y(length(A):end)) % can see the 12th seasonal factor.
 present(model_armax_nrs)
+
 resid3 = resid(model_armax_nrs, datay)
+resid3_test = filter(model_armax_nrs.a,model_armax_nrs.c, datay.y) %This gives diff from resid..?
 whitenessTest(resid3.y(length(A):end)) %white and all coefficients are significant!
-%% Create an init model (AR) - (Used for differentied data only)
 
-A = [1,0,0]
-B=[]
-C = [ ]
-model_init = idpoly(A,B,C) ;
-model_armax = pem( datays , model_init )
-%% Residual of armax
-error_armax = resid(model_armax,datays)
-acf_pacf_norm(error_armax.y(length(A):end))
-%% Add the seasonal factor (used for seasonally differentied data only):
-model_init = idpoly( [ 1 0 0 ] , [ ] , [ 1 zeros( 1 , 12 ) ] ) ;
-model_init.structure.c.Free = [ zeros( 1 , 12 ) 1 ] ;
-model_armax_season = pem( datays , model_init)
-error_armax_season = resid(model_armax_season, datays)
-[autoseas,pautoseas]=acf_pacf_norm(error_armax_season.y(length(A):end))
-
-%% whiteness test and normplot
-normplot(autoseas)
-whitenessTest(error_armax_season.y(length(A):end))
-
-% seasonal dependance gone! Seems normally distr. from normplot. Kinda
-% similar to the coeffs used. 
 
 %% 2.4
 
@@ -232,11 +205,11 @@ datas_s=datas_s( length(A24 ) : end );
 
 
 %% First try with ar up to 2
-modelinit = idpoly ( [1 0 0] , [ ] , [] ) ;
-modelfin = pem( datas_s , modelinit )
-error_modelfin_season = resid(modelfin, datas_s)
-[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season(length(A):end))
-%Didnt work completely, add a factor for the seasonality
+% modelinit = idpoly ( [1 0 0] , [ ] , [] ) ;
+% modelfin = pem( datas_s , modelinit )
+% error_modelfin_season = resid(modelfin, datas_s)
+% [autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season(length(A):end))
+% %Didnt work completely, add a factor for the seasonality
 
 
 %% try a few things 
@@ -246,31 +219,25 @@ modelinit.Structure.c.Free=[1 zeros(1,23) 1]
 
 modelfin = pem(datas_s, modelinit)
 error_modelfin_season = resid(modelfin, datas_s)
+error_modelfin_season = filter( modelfin.a, modelfin.c, datas_s ); error_modelfin_season = error_modelfin_season(length(modelfin.a):end)
 figure(1)
-[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season(length(A):end));
+[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season);
 present(modelfin)
 figure(2)
-whitenessTest(error_modelfin_season(length(A):end))
+whitenessTest(error_modelfin_season)
 
-%% Use PEM to find model etc (not differentiated data) 
-modelinit=idpoly([1 zeros(1, 10)], [], [1 zeros(1,25)])
-modelinit.Structure.c.Free=[1 zeros(1,22) 1 1 1]
-modelinit.Structure.a.Free=[1 1 1 1 1 zeros(1,6)]
-modelfin = pem(datas, modelinit)
-error_modelfin_season = resid(modelfin, datas)
-[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season.y(length(A):end))
-present(modelfin)
-whitenessTest(error_modelfin_season.y(length(A):end))
-% Lower FPE and more white, but too complex? All coeffs seem significant.
-%% Next try svedala
+
+%% Next try svedala (non diff data)
 A = [1 zeros(1, 17)]
 C= [1 zeros(1,24)]
 modelinit=idpoly(A, [], C)
 modelinit.Structure.a.Free=[1 1 1 1 1 zeros(1,12) 1 ]
 modelinit.Structure.c.Free=[1 0 0 1 zeros(1, 6) 1 zeros(1, 12) 1 1]
 modelfin = pem(datas, modelinit)
-error_modelfin_season = resid(modelfin, datas)
-[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season.y(length(A):end))
+error_modelfin_season = resid(modelfin, datas); error_modelfin_season(15:end);
+%error_modelfin_season = filter( modelfin.a, modelfin.c, datas.y); error_modelfin_season = error_modelfin_season(length(modelfin.a):end)
+[autoseas,pautoseas]=acf_pacf_norm(error_modelfin_season.y)
 present(modelfin)
-whitenessTest(error_modelfin_season.y(length(A):end))
+figure(4)
+whitenessTest(error_modelfin_season.y)
 
