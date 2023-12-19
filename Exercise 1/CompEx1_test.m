@@ -72,7 +72,7 @@ present(ar2)
 whitenessTest(error_ar1)
 % It seems white enough
 %% Arma model
-arma_model_1= armax ( y1 , [ 2, 1] ) ;
+arma_model_1 = armax ( y1 , [ 2, 1] ) ;
 error_arma1 = MyFilter(arma_model_1.A, arma_model_1.C, y1)
 [autoARMA,pautoARMA]=acf_pacf_norm(error_arma1)
 present(arma_model_1)
@@ -179,7 +179,7 @@ C = [ 1 zeros(1 , 12) ]
 model_init = idpoly(A,B,C) ;
 model_init.structure.a.Free = [ 1  1 1 zeros(1 , 9) 1 1 1 ] ;
 model_init.structure.c.Free = [ zeros(1 , 12) 1] ;
-model_armax_nrs = pem( datay , model_init )<
+model_armax_nrs = pem( datay , model_init )
 
 
 %% Residual of armax (above) (rel

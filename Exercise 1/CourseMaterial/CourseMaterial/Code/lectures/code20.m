@@ -8,7 +8,7 @@
 % Reference: 
 %   "An Introduction to Time Series Modeling", 4th ed, by Andreas Jakobsson
 %   Studentlitteratur, 2021
-%
+
 clear; clc;
 close all;
 addpath('../functions', '../data')              % Add this line to update the path
@@ -102,5 +102,5 @@ ey = ey(100:end);                               % Ignore the initial values to l
 checkIfWhite( ey );
 
 [~, pacfEst] = plotACFnPACF( ey, 40, 'Kalman prediction' );
-checkIfNormal( pacfEst(2:end), 'PACF' );
+checkIfNormal( pacfEst(2:end),'PACF');
 
