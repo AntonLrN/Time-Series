@@ -1,11 +1,27 @@
-% Get data
+% For plotting on 2 monitors:
+monitorPositions = get(0, 'MonitorPositions');
+
+% Assuming your second monitor is the second row
+secondMonitor = monitorPositions(2, :);
+
+% Define the size of your figure [width, height]
+figSize = [1500, 850];
+
+% Calculate position for the new figure
+% The figure is placed at the center of the second monitor
+figX = secondMonitor(1) + (secondMonitor(3) - figSize(1)) / 2;
+figY = secondMonitor(2) + (secondMonitor(4) - figSize(2)) / 2;
+
+% Create a new figure and set its position
+figure;
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 %% Run this if you wanna simulate AR(1) data etc and try Kalman on simulated data
 plott = true %Do i want plots in this cell?
 realdat = 0 % this is done so that later in plots we know if we are using proj. data or sim. data
 rng(0)                                         
 extraN = 100;
 N  = 999;
-A0 = [1 -0.7];
+A0 = [1 -0.95];
 C0 = [1];                            
 e  = randn( N+extraN, 1 );
 x_real  = filter( C0, A0, e );   x_real = x_real(extraN+1:end);
@@ -63,8 +79,8 @@ close all
 y = y; %The data with nans
 data = datat; %y without nans
 
-Q = 1;  % process noise variance
-R = 10;   % measurement noise variance
+Q = 2;  % process noise variance                        %%% (Q,R) = (2,1), (10, 10) looks pretty good. 
+R = 20;   % measurement noise variance
 % state Transition Matrix
 a1s = linspace(-0.999, 0.999,1000);
 resids=zeros(1,length(a1s));
@@ -160,12 +176,7 @@ end
 
 
 %% plot results
-%Should I Include the 1st column x_est?? It is just [0 0 0]' so it is not a
-%good value. And it shifts everything for the worse. 
-
 x_st = x_est(:,3:3:end); % Take every third state (becuase we only have measurements on every third iteration
-x_st1 = x_est(:,1:3:end)
-x_st2 = x_est(:,3:3:end)
 x_st_vec = x_st(:); % This looks about right. 
 if realdat==1 %this creates sum for the interpolated rain, to compare with if we are using the project data.
     rain_int_sum = zeros(1, length(rain_int)/3)
@@ -198,7 +209,7 @@ title("Estimated summed rain")
 subplot(224)
 plot(datat)
 title("Actual summed rain")
-
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 %% Compare the sums in same graph
 if realdat == 1
     y_sum_compare = rain_int_sum/3

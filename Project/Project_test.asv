@@ -92,7 +92,7 @@ y = y; %The one with nans
 data = datat; %y without nans
 % Known parameters
 
-Q = 0.01;  % Process noise variance
+Q = 0.1;  % Process noise variance
 R = 1;   % Measurement noise variance
 % State Transition Matrix
 a1s = linspace(-0.999, 0.999,1000);
