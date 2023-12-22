@@ -2,23 +2,23 @@
 
 addpath('C:\Users\anton\Desktop\University\Time Series Analysis\git.ts\Time-Series\Project\CourseMaterial')
 %%
-% Get monitor positions
-monitorPositions = get(0, 'MonitorPositions');
-
-% Assuming your second monitor is the second row
-secondMonitor = monitorPositions(2, :);
-
-% Define the size of your figure [width, height]
-figSize = [1500, 850];
-
-% Calculate position for the new figure
-% The figure is placed at the center of the second monitor
-figX = secondMonitor(1) + (secondMonitor(3) - figSize(1)) / 2;
-figY = secondMonitor(2) + (secondMonitor(4) - figSize(2)) / 2;
-
-% Create a new figure and set its position
-
-set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+% % Get monitor positions
+% monitorPositions = get(0, 'MonitorPositions');
+% 
+% % Assuming your second monitor is the second row
+% secondMonitor = monitorPositions(2, :);
+% 
+% % Define the size of your figure [width, height]
+% figSize = [1500, 850];
+% 
+% % Calculate position for the new figure
+% % The figure is placed at the center of the second monitor
+% figX = secondMonitor(1) + (secondMonitor(3) - figSize(1)) / 2;
+% figY = secondMonitor(2) + (secondMonitor(4) - figSize(2)) / 2;
+% 
+% % Create a new figure and set its position
+% 
+% set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
 
 %% Run this if you wanna simulate AR(1) data etc and try Kalman on simulated data
@@ -64,7 +64,7 @@ if plott == true
 
 end
 
-set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+% set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 %% Let us try on real data:
 load proj23.mat
 realdat=1
@@ -92,11 +92,12 @@ y = y; %The one with nans
 data = datat; %y without nans
 % Known parameters
 
-Q = 0.01;  % Process noise variance
+Q = 1;  % Process noise variance
 R = 1;   % Measurement noise variance
 % State Transition Matrix
 a1s = linspace(-0.999, 0.999,1000);
 resids=zeros(1,length(a1s));
+% resids_x=zeros(1,length(a1s));
 y_sums = zeros(length(datat),1) ;
 for i = 1:length(a1s)
     a1  = a1s(i);
@@ -145,7 +146,7 @@ for i = 1:length(a1s)
     
     %create total mean squared errors for sums:
     resids(i) = mean((y_sums-data).^2);
-    %resids_x(i) = mean((x_st_vec-x_real).^2);
+    % resids_x(i) = mean((x_st_vec-x_real).^2);
 end
 % Output
 [minValue, index] = min(resids);
@@ -156,7 +157,7 @@ a1 = a1s(index);
 %intuition?
 
 
-scales=linspace(1,50, 1000);
+scales=linspace(0.1,100, 1000);
 resids_s=zeros(1,length(scales));
 for i = 1:length(scales)
     % a1  = a1s(index);
@@ -206,18 +207,20 @@ for i = 1:length(scales)
     
     %create total mean squared errors for sums:
     resids_s(i) = mean((y_sums-data).^2);
+    % resids_x(i) = mean((x_st_vec-x_real).^2);
 end
 
 
 
 
 [minValue, index] = min(resids_s);
+ % [minValue, index] = min(resids_x);
 fprintf('The minimum value is for scale %d and its index is %d.\n', scales(index), index);
 % CONTINUE WITH THE "GOOD" A1 and scale.
 scale=scales(index);
 
 %Try R
-Rs = linspace(0.01, 50, 1000);
+Rs = linspace(0.01, 100, 1000);
 resids_r = zeros(1,length(Rs));
 for i = 1:length(Rs)
     % a1  = a1s(index);
@@ -271,6 +274,7 @@ for i = 1:length(Rs)
     end
     %create total mean squared errors for sums:
     resids_r(i) = mean((y_sums-data).^2);
+    % resids_x(i) = mean((x_st_vec-x_real).^2);
    
 end
 
@@ -279,6 +283,7 @@ end
 
 
 [minValue, index] = min(resids_r);
+% [minValue, index] = min(resids_x);
 fprintf('The minimum value is for R %d and its index is %d.\n', Rs(index), index);
 % CONTINUE WITH THE "GOOD" A1.
 R=Rs(index);
@@ -351,7 +356,7 @@ plot(x_st_vec, "b")
 title("Estimated daily rain")
 if realdat == 0
 hold on
-plot(x_real,"r")
+% plot(x_real,"r")
 hold off
 end
 subplot(223)
@@ -373,19 +378,19 @@ title("estimated and real summed rain")
 hold off
 
 %% Look only at rain, does it need transform etc?
-rain=x_st_vec
-rain_p = rain + abs(min(rain))
-
-figure; 
-lambda_max = bcNormPlot(rain,1)    % log-transform är lämplig
-%rain_log= log(rain+1);
-%figure
-%plot(rain_log)
-
-%%
-%%
-nvdi = ElGeneina.nvdi;
-nvdi = nvdi/255*2 - 1;      % rescale to [-1,1]
-x = rain_p(22*36+1:end)';   % x and y need to be in phase
-y = nvdi;   
+% rain=x_st_vec
+% rain_p = rain + abs(min(rain))
+% 
+% figure; 
+% lambda_max = bcNormPlot(rain,1)    % log-transform är lämplig
+% %rain_log= log(rain+1);
+% %figure
+% %plot(rain_log)
+% 
+% %%
+% %%
+% nvdi = ElGeneina.nvdi;
+% nvdi = nvdi/255*2 - 1;      % rescale to [-1,1]
+% x = rain_p(22*36+1:end)';   % x and y need to be in phase
+% y = nvdi;   
 

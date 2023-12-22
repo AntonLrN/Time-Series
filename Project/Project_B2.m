@@ -1,7 +1,7 @@
 %% Use reconstructed rain as input model to predict NVDI
-clear; 
+% clear; 
 %run Project;
-close all; clc;
+% close all; clc;
 load proj23.mat
 % load rain_3_est.mat
 noLags = 140;
@@ -9,8 +9,10 @@ noLags = 140;
 nvdi = ElGeneina.nvdi;
 nvdi = nvdi/255*2 - 1;      % rescale to [-1,1]
 %% Should we transform the data?
-% x = x_st_vec(22*36+1:end)';
-x_input = x_st_vec(1:end)';
+x = x_st_vec(22*36+1:end)';
+%This to train on 
+cutoff= 300
+x_input = x_st_vec(cutoff:end)';
 % x and y need to be in phase
 y = nvdi;           
 
@@ -30,9 +32,9 @@ y=log(y+1);
 
 %% extract modeling and validation sets and test
 modelLim = 36*11%36*13;        % We select 13 years. Does the data seem stable enough?
-x = x_input(22*36+1:end)';
+x = x_input(22*36+1 - (cutoff-1):end)';
 % sets for y
-modely = y(1:modelLim);  modely = modely-mean(modely); 
+modely = y(1:modelLim);  %modely = modely-mean(modely); 
 valy = y(1:36*14); 
 testy = y(1:36*16)
 
@@ -48,55 +50,85 @@ plotACFnPACF(x_input, noLags, 'Input, x_t' ); %From this we can see a very clear
 
 
 %% Lets try add a1 since we know that should be there
-A = [1 1 zeros(1,34) 1]
+A = [1 1]
 C = [1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
 
-%% Lets try add a1 since we know that should be there
-C = [1 1]
+%% Lets try add c 2 c3
+C = [1 0 1 1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
 
-%% Lets try add a1 since we know that should be there
-A = [1 1 0 1 zeros(1,32) 1 1]
+%% Lets try add to conv with a36
+A = conv(A, [1 zeros(1,35) -1])
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+% The residual is white when doing whiteness test! Both Monti and Spectrum.
+% 
+%% Also add C36?
+C = [1 0 0 1 zeros(1,32) 1]
 
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-%% Lets try add a1 since we know that should be there
-C = [ 1 1 zeros(1, 13) 1 zeros(1, 20) 1]
+
+%% Lets try add a3?
+A(4) = 1 
 
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-%% Lets try add a1 since we know that should be there
 
-A = [1 1 0 1 zeros(1, 8) 1 zeros(1,23) 1 1]
+%% Lets remove C3 since it is almost not sig. 
+C(4) = 0
+
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-%% Lets try add a1 since we know that should be there
+%% Add C1
 
-C =[ 1 1 zeros(1, 10) 1 0 0 1 zeros(1, 20) 1]
+C(2) = 1 
+
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-%% Lets try add a1 since we know that should be there
+%% Add A4
 
-A = [1 1 0 1 zeros(1, 8) 0 zeros(1,23) 1 1]
+A(5) = 1 
+
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
+%% Add C12
+
+C(13) = 1
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+
+%% Add A5
+
+A(6) = 1
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+
+
+%White accoring to spectrum test
 %White accoring to spectrum test
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create the BJ model.
@@ -113,8 +145,11 @@ title('Prolonged ringing due to root on the unit circle')
 %% Lets remove some additional samples just to be safe...
 cutoff = 10
 ey = filter( inputModel.A, inputModel.C, modely );   
-ex = ex(length(inputModel.A)+cutoff:end );                      % Remove some more samples given the ringing (this is much more than needed).
 ey = ey(length(inputModel.A)+cutoff:end );
+% ex = ex(length(inputModel.A)+cutoff:end );                      % Remove some more samples given the ringing (this is much more than needed).
+ex =   filter(inputModel.A, inputModel.C, modelx); 
+ex = ex(length(inputModel.A)+cutoff:end );
+%%
 var_ex = var(ex);
 
 figure;
@@ -131,7 +166,7 @@ title('Crosscorrelation between filtered in- and output')
 
 %% Lets form an initial model.
 % The function call is estimateBJ( y, x, C1, A1, B(d+s), A2(r), titleStr, noLags )
-estimateBJ( modely, modelx, [1], [1 1], [0 0 0 0 1], [1], 'BJ model 1', noLags );
+estimateBJ( modely, modelx, [1], [1 1], [0 0 1 1], [1 1], 'BJ model 1', noLags );
 
 %% Better... Maybe add a c2 term?
 [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1 0 1], [1 1], [0 0 0 0 1], [1], 'BJ model 3', noLags );
@@ -163,11 +198,11 @@ plot(ehat)
 legend('ehat')
 
 %% Naive predictor: 
-% k=1, month i rains as much as in month i-1
-% k=7, month i rains as much as in month i-36, i.e. last year
+% k=1 % month i rains as much as in month i-1
+k=7 %, month i rains as much as in month i-36, i.e. last year
 naive_x = zeros(length(x),1);
-for i=2:length(x)
-    naive_x(i) = x(i-1);
+for i=37:length(x)
+    naive_x(i) = x(i-36);
 end
 e_naive = x - naive_x;
 e_naive = e_naive(length(modely)+1:end);
