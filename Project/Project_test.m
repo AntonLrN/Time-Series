@@ -1,24 +1,24 @@
 %%%% Project %%%%
 
 addpath('C:\Users\anton\Desktop\University\Time Series Analysis\git.ts\Time-Series\Project\CourseMaterial')
-%%
-% % Get monitor positions
-% monitorPositions = get(0, 'MonitorPositions');
-% 
-% % Assuming your second monitor is the second row
-% secondMonitor = monitorPositions(2, :);
-% 
-% % Define the size of your figure [width, height]
-% figSize = [1500, 850];
-% 
-% % Calculate position for the new figure
-% % The figure is placed at the center of the second monitor
-% figX = secondMonitor(1) + (secondMonitor(3) - figSize(1)) / 2;
-% figY = secondMonitor(2) + (secondMonitor(4) - figSize(2)) / 2;
-% 
-% % Create a new figure and set its position
-% 
-% set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+%
+% Get monitor positions
+monitorPositions = get(0, 'MonitorPositions');
+
+% Assuming your second monitor is the second row
+secondMonitor = monitorPositions(2, :);
+
+% Define the size of your figure [width, height]
+figSize = [1500, 850];
+
+% Calculate position for the new figure
+% The figure is placed at the center of the second monitor
+figX = secondMonitor(1) + (secondMonitor(3) - figSize(1)) / 2;
+figY = secondMonitor(2) + (secondMonitor(4) - figSize(2)) / 2;
+
+% Create a new figure and set its position
+
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
 
 %% Run this if you wanna simulate AR(1) data etc and try Kalman on simulated data

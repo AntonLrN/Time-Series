@@ -1,4 +1,4 @@
-%% Use reconstructed rain as input model to predict NVDI
+ %% Use reconstructed rain as input model to predict NVDI
 clear; 
 %run Project;
 close all; clc;
