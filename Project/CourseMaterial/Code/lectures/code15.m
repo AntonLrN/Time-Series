@@ -17,7 +17,7 @@
 %   "An Introduction to Time Series Modeling", 4th ed, by Andreas Jakobsson
 %   Studentlitteratur, 2021
 %
-clear; clc;
+% clear; clc;
 close all;
 addpath('../functions', '../data')              % Add this line to update the path
 rng(1)                                          % Set the seed (just done for the lecture!)

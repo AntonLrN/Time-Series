@@ -58,8 +58,7 @@ testy = y(1:36*16)
 modelx = x(1:modelLim);  modelx = modelx-mean(modelx);
 valx = x(1:36*14);  valx = valx-mean(valx);
 testx = x(1:36*16); testx = testx-mean(testx);
-
-%% if do diff
+% %% if do diff
 % modelLim = 36*11%36*13;        % We select 13 years. Does the data seem stable enough?
 % x=x(2:end)
 % x = x_input(22*36+1 - (cutoff-1):end)';
@@ -79,28 +78,56 @@ set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
 
 
-%% Lets try add a1 since we know that should be there
-A = [1 1]
+%% Lets try add a36 first this time
+As = [1 zeros(1,35) -1]
+A = As
 C = [1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
 
-%% Lets try add c 2 c3
-C = [1 0 1 1]
+%% Lets try add c1
+C = [1 1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
 
-%% Lets try add to conv with a36
-A = conv(A, [1 zeros(1,35) -1])
+%% Lets to add a1 a2
+A = conv(As, [1 1 1])
 
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 % The residual is white when doing whiteness test! Both Monti and Spectrum.
+%% Lets remove C1, not sig
+C = [1 ]
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+% The residual is white when doing whiteness test! Both Monti and Spectrum.
+%% add c12
+C = [1 zeros(1,11) 1]
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+
+%% add c36
+C = [1 zeros(1,11) 1 zeros(1,23) 1]
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+
+%% add a3
+A = conv(As, [1 1 1 zeros(1, 30) 1])
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
 %% LET US CONTINUE TO GET K = 7 GOOD. 
 % remove C3, it was not sig. 
 C = [1 0 1]
@@ -153,20 +180,17 @@ hold off
 xlabel('Lag')
 ylabel('Amplitude')
 title('Crosscorrelation between filtered in- and output')
-% d = 2 or, maybe r = 1 or 2, unsure and s = 0
-%% we now want to find orders of A1 and C1
- 
+% d = 2 or potentially 0?, maybe r = 0 and s = 2
+
 %% Lets form an initial model.
 % The function call is estimateBJ( y, x, C1, A1, B(d+s), A2(r), titleStr, noLags )
-% Use the B and A2, then find C1 and A! as usual
-[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
+[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1], [1 1], [0 0 0 1 1], [1  1 1], 'BJ model 1', noLags );
 var_ey = var(ey);
-acf_pacf_norm(ey);
-%% Let us try to add a1, seems to be a strong pacf there
-[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1 1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
-var_ey = var(ey);
-acf_pacf_norm(ey);
 
+%% Lets form an initial model if we are using yd
+% The function call is estimateBJ( y, x, C1, A1, B(d+s), A2(r), titleStr, noLags )
+[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1 1], [1 1], [0 1 1], [1], 'BJ model 1', noLags );
+var_ey = var(ey);
 %% Better... Maybe add a c2 term?
 % [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1 0 1], [1 1], [0 0 0 0 1], [1], 'BJ model 3', noLags );
 % var_ey = var(ey);
@@ -174,7 +198,6 @@ acf_pacf_norm(ey);
 
 %% We now have a white residual; can we trust the Monti test?
 checkIfNormal( pacfEst(2:end), 'PACF' );
-% Nice and white.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Lets predict the input first.
 close all
@@ -186,11 +209,11 @@ xhatk = filter(Gx, inputModel.C, valx);
 % xhat = exp(xhatk)-1;   x = exp(valx)-1;   
 xhat = xhatk;   x = valx  
 
-ehat = x' - xhat';
+ehat = x - xhat;
 ehat = ehat(modelLim+1:end);
 
 % plot prediction
-plot([x' xhat'])
+plot([x xhat])
 xline(modelLim,'--');
 title('Prediction, k = 1, model 2')
 legend('valx','xhatk','validation start')
@@ -208,11 +231,11 @@ end
 e_naive = x - naive_x;
 e_naive = e_naive(length(modely)+1:end);
 figure
-plot([x' naive_x])
+plot([x naive_x])
 legend('valx','naive x')
 MSEN = mean(e_naive.^2)
 %% Naive predictor k = 7: 
-% k=1 % month i rains as much as in month i-1
+k=1 % month i rains as much as in month i-1
 k=7 %, month i rains as much as in month i-36, i.e. last year
 naive_x = zeros(length(x),1);
 for i=37:length(x)
@@ -221,11 +244,11 @@ end
 e_naive = x - naive_x;
 e_naive = e_naive(length(modely)+1:end);
 figure
-plot([x' naive_x])
+plot([x naive_x])
 legend('valx','naive x')
 MSEN = mean(e_naive.^2)
 %% analyse input prediction
-% clc; close all
+clc; close all
 % calculate variances for prediction residual
 var_ehat = var(ehat)
 % Normalized prediction variance, should be < 1
@@ -240,7 +263,7 @@ figure
 acf( ehat, 100, 0.05,1,0,false); title('ACF of prediction residual, model 2, k=7')
 figure
 acf( e_naive, 100, 0.05,1,0,false); title('ACF of naive prediction residual, model 2, k=7')
-%%
+
 % Check if normal with D'Agostino-Pearson's K2 test
 acfEst = acf( ehat, 100, 0.05 );
 checkIfNormal( acfEst(k+1:end), 'ACF' );
@@ -255,7 +278,7 @@ KC = conv( foundModel.F, foundModel.C );
 [Fy, Gy] = polydiv( foundModel.C, foundModel.D, k );
 [Fhh, Ghh] = polydiv( conv(Fy, KB), KC, k );
 
-yhatk  = filter(Fhh, 1, xhatk') + filter(Ghh, KC, valx')+ filter(Gy, KC, valy);
+yhatk  = filter(Fhh, 1, xhatk) + filter(Ghh, KC, valx)+ filter(Gy, KC, valy);
 
 % -----------inverse transform before plotting anything-------------- %
 % yhat = exp(yhatk)-1;   y = exp(valy)-1; % Dont really need to transform
@@ -300,7 +323,7 @@ plot([y naive_y])
 legend('valy','naive y')
 MSEN = mean(e_naive_y.^2)
 %% analyse prediction
-% clc; close all
+clc; close all
 % calculate variances for prediction residual
 var_ehat_y = var(ehat_y)
 % Normalized prediction variance, should be < 1
@@ -321,6 +344,12 @@ acfEst = acf( ehat_y, 100, 0.05 );
 checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 
-
 %%
-
+%Restore
+yres = filter([1], [1 1], yhat)
+figure(1)
+%%
+plot([1:length(y)], [1:length(y)]*a.p1 + a.p2)
+hold on
+plot(y)
+hold off

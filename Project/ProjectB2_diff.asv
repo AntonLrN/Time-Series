@@ -2,6 +2,7 @@
 % clear; 
 %run Project;
 % close all; clc;
+
 load proj23.mat
 % load rain_3_est.mat
 noLags = 333;
@@ -21,7 +22,7 @@ nvdi_s= 2 * normalized_nvdi - 1;
 %%
 
 %% Should we transform the data?
-x = x_st_vec(22*36+1:end)';
+x = x_st_vec(22*36+2:end)';
 %This to train on 
 cutoff= 300 %this I just did because the first few hundred values in the rain seemed to not help.
 x_input = x_st_vec(cutoff:end)';
@@ -47,6 +48,7 @@ y=log(y+2);
 x_input = x_input - mean(x_input)
 meany = mean(y)
 y = y - meany
+y = diff(y)
 % y might have slight trend. 
 %% extract modeling and validation sets and test
 modelLim = 36*11%36*13;        % We select 13 years. Does the data seem stable enough?
@@ -153,19 +155,19 @@ hold off
 xlabel('Lag')
 ylabel('Amplitude')
 title('Crosscorrelation between filtered in- and output')
-% d = 2 or, maybe r = 1 or 2, unsure and s = 0
+% d = 2 or, maybe r = 0 , unsure and s = 0
 %% we now want to find orders of A1 and C1
  
 %% Lets form an initial model.
 % The function call is estimateBJ( y, x, C1, A1, B(d+s), A2(r), titleStr, noLags )
 % Use the B and A2, then find C1 and A! as usual
-[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
+[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1], [0 0 1], [1], 'BJ model 1', noLags );
 var_ey = var(ey);
 acf_pacf_norm(ey);
-%% Let us try to add a1, seems to be a strong pacf there
-[ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1 1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
-var_ey = var(ey);
-acf_pacf_norm(ey);
+% %% Let us try to add a1, seems to be a strong pacf there
+% [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1 0 0 0 0 0 1], [1], [0 0 1 1], [1 1 ], 'BJ model 1', noLags );
+% var_ey = var(ey);
+% acf_pacf_norm(ey);
 
 %% Better... Maybe add a c2 term?
 % [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1 0 1], [1 1], [0 0 0 0 1], [1], 'BJ model 3', noLags );
@@ -178,7 +180,7 @@ checkIfNormal( pacfEst(2:end), 'PACF' );
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Lets predict the input first.
 close all
-k = 7;
+k = 1;
 [Fx, Gx] = polydiv( inputModel.C, inputModel.A, k );
 xhatk = filter(Gx, inputModel.C, valx);
 
@@ -247,7 +249,7 @@ checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 %% Predict NVDI, yhatk, using both x, xhatk, and y
 close all
-k = 7
+k = 1
 KA = conv( foundModel.D, foundModel.F );
 KB = conv( foundModel.D, foundModel.B );
 KC = conv( foundModel.F, foundModel.C );
@@ -323,4 +325,9 @@ checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 
 %%
-
+y_true = filter( [1], [1 -1], yhat)
+y_true = filter( [1], [1 -1], yhat)
+plot(y_true)
+hold on
+plot(valy)
+hold off

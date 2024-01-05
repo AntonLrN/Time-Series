@@ -161,11 +161,11 @@ title('Crosscorrelation between filtered in- and output')
 % Use the B and A2, then find C1 and A! as usual
 [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
 var_ey = var(ey);
-acf_pacf_norm(ey);
+acf_pacf_norm(ey)
 %% Let us try to add a1, seems to be a strong pacf there
 [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx', [1], [1 1], [0 0 1], [1 1 1], 'BJ model 1', noLags );
 var_ey = var(ey);
-acf_pacf_norm(ey);
+acf_pacf_norm(ey)
 
 %% Better... Maybe add a c2 term?
 % [ foundModel, ey, ~, pacfEst ] = estimateBJ( modely, modelx, [1 0 1], [1 1], [0 0 0 0 1], [1], 'BJ model 3', noLags );
@@ -174,7 +174,6 @@ acf_pacf_norm(ey);
 
 %% We now have a white residual; can we trust the Monti test?
 checkIfNormal( pacfEst(2:end), 'PACF' );
-% Nice and white.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Lets predict the input first.
 close all
@@ -186,11 +185,11 @@ xhatk = filter(Gx, inputModel.C, valx);
 % xhat = exp(xhatk)-1;   x = exp(valx)-1;   
 xhat = xhatk;   x = valx  
 
-ehat = x' - xhat';
+ehat = x - xhat;
 ehat = ehat(modelLim+1:end);
 
 % plot prediction
-plot([x' xhat'])
+plot([x xhat])
 xline(modelLim,'--');
 title('Prediction, k = 1, model 2')
 legend('valx','xhatk','validation start')
@@ -208,11 +207,11 @@ end
 e_naive = x - naive_x;
 e_naive = e_naive(length(modely)+1:end);
 figure
-plot([x' naive_x])
+plot([x naive_x])
 legend('valx','naive x')
 MSEN = mean(e_naive.^2)
 %% Naive predictor k = 7: 
-% k=1 % month i rains as much as in month i-1
+k=1 % month i rains as much as in month i-1
 k=7 %, month i rains as much as in month i-36, i.e. last year
 naive_x = zeros(length(x),1);
 for i=37:length(x)
@@ -221,11 +220,11 @@ end
 e_naive = x - naive_x;
 e_naive = e_naive(length(modely)+1:end);
 figure
-plot([x' naive_x])
+plot([x naive_x])
 legend('valx','naive x')
 MSEN = mean(e_naive.^2)
 %% analyse input prediction
-% clc; close all
+clc; close all
 % calculate variances for prediction residual
 var_ehat = var(ehat)
 % Normalized prediction variance, should be < 1
@@ -240,7 +239,7 @@ figure
 acf( ehat, 100, 0.05,1,0,false); title('ACF of prediction residual, model 2, k=7')
 figure
 acf( e_naive, 100, 0.05,1,0,false); title('ACF of naive prediction residual, model 2, k=7')
-%%
+
 % Check if normal with D'Agostino-Pearson's K2 test
 acfEst = acf( ehat, 100, 0.05 );
 checkIfNormal( acfEst(k+1:end), 'ACF' );
@@ -255,7 +254,7 @@ KC = conv( foundModel.F, foundModel.C );
 [Fy, Gy] = polydiv( foundModel.C, foundModel.D, k );
 [Fhh, Ghh] = polydiv( conv(Fy, KB), KC, k );
 
-yhatk  = filter(Fhh, 1, xhatk') + filter(Ghh, KC, valx')+ filter(Gy, KC, valy);
+yhatk  = filter(Fhh, 1, xhatk) + filter(Ghh, KC, valx)+ filter(Gy, KC, valy);
 
 % -----------inverse transform before plotting anything-------------- %
 % yhat = exp(yhatk)-1;   y = exp(valy)-1; % Dont really need to transform
@@ -300,7 +299,7 @@ plot([y naive_y])
 legend('valy','naive y')
 MSEN = mean(e_naive_y.^2)
 %% analyse prediction
-% clc; close all
+clc; close all
 % calculate variances for prediction residual
 var_ehat_y = var(ehat_y)
 % Normalized prediction variance, should be < 1
@@ -321,6 +320,12 @@ acfEst = acf( ehat_y, 100, 0.05 );
 checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 
-
 %%
-
+%Restore
+yres = filter([1], [1 1], yhat)
+figure(1)
+%%
+plot([1:length(y)], [1:length(y)]*a.p1 + a.p2)
+hold on
+plot(y)
+hold off

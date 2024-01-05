@@ -1,5 +1,7 @@
 %% Use reconstructed rain as input model to predict NVDI
 % clear; 
+%%%%%%%%% This itteration differentiates first.
+%%%%%%%%% idk. Still got strong thing at 36. 
 %run Project;
 % close all; clc;
 load proj23.mat
@@ -38,16 +40,16 @@ xlabel('Lambda')
 ylabel('Log-likelihood')
 %% Transform and make stationary. They should now be stationary (maybe y has a trend)
 
-x_offset = abs(min(x_input))+1
-% % Both seems to indicate that a log-transform could be helpful.
-x_input = log(x_input+x_offset);
-% % x=log(x+abs(min(x))+1);
-y=log(y+2);
-% take away the means, which i suppose we have to do?
-x_input = x_input - mean(x_input)
-meany = mean(y)
-y = y - meany
-% y might have slight trend. 
+% x_offset = abs(min(x_input))+1
+% % % Both seems to indicate that a log-transform could be helpful.
+% x_input = log(x_input+x_offset);
+% % % x=log(x+abs(min(x))+1);
+% y=log(y+2);
+% % take away the means, which i suppose we have to do?
+% x_input = x_input - mean(x_input)
+% meany = mean(y)
+% y = y - meany
+% % y might have slight trend. 
 %% extract modeling and validation sets and test
 modelLim = 36*11%36*13;        % We select 13 years. Does the data seem stable enough?
 % sets for y
@@ -74,52 +76,52 @@ testx = x(1:36*16); testx = testx-mean(testx);
 %% Create a model for the input.
 plotACFnPACF(x_input, noLags, 'Input, x_t' ); %From this we can see a very clear season of 36
 set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+%% Differentiate x
+x_new = filter(  [ 1 zeros(1,35) -1],[1], x_input'); x_new = x_new(37:end)
+x_new = x_new - mean(x_new)
 %% There seems to be a strong periodicity at 36, suggesting that a differentiation might help.
-%estimateARMA( modelx, [ 1 zeros(1,35) 1], [ 1 ], 'Differentiated input, version 2', noLags );
+estimateARMA(x_new, [ 1 zeros(1,35) 1], [ 1 ], 'Differentiated input, version 2', noLags );
 
 
 
 %% Lets try add a1 since we know that should be there
 A = [1 1]
 C = [1]
-inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+inputModel = estimateARMA(x_new, A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
-
-%% Lets try add c 2 c3
-C = [1 0 1 1]
-inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
-ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+%% Lets try add c1 c3
+C = [1 1 0 1]
+inputModel = estimateARMA(x_new, A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_new ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-
-%% Lets try add to conv with a36
-A = conv(A, [1 zeros(1,35) -1])
-
-inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
-ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
-acf_pacf_norm(ex);
-% The residual is white when doing whiteness test! Both Monti and Spectrum.
-%% LET US CONTINUE TO GET K = 7 GOOD. 
-% remove C3, it was not sig. 
-C = [1 0 1]
-
-inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
-ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+%% Lets try a12
+A = [1 1 zeros(1,10) 1]
+inputModel = estimateARMA(x_new, A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_new ); ex(length(A):end);
 acf_pacf_norm(ex);
 
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
-%%
-% add a2
-A(13) = 1
-
-inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
-ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+%% Lets try add c5
+C = [1 1 0 1 0 1]
+inputModel = estimateARMA(x_new, A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_new ); ex(length(A):end);
 acf_pacf_norm(ex);
-% How we are super white, and all coeffs are significant. 
 
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
+%% Lets try add a3
+A(4) = 1
+inputModel = estimateARMA(x_new, A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_new ); ex(length(A):end);
+acf_pacf_norm(ex);
+
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create the BJ model.
 %inputModel.A = conv([1 zeros(1, 36-1) -1], inputModel.A);   % Add the differentiation to the model.
@@ -323,4 +325,3 @@ checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 
 %%
-

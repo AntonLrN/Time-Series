@@ -1,5 +1,7 @@
 %% Use reconstructed rain as input model to predict NVDI
 % clear; 
+%%%%%%%%% This iteration just to try to get better input. Kinda didnt work,
+%%%%%%%%% idk. Still got strong thing at 36. 
 %run Project;
 % close all; clc;
 load proj23.mat
@@ -85,7 +87,7 @@ C = [1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
-
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
 %% Lets try add c 2 c3
 C = [1 0 1 1]
@@ -93,13 +95,14 @@ inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', no
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 
-
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 %% Lets try add to conv with a36
 A = conv(A, [1 zeros(1,35) -1])
 
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 % The residual is white when doing whiteness test! Both Monti and Spectrum.
 %% LET US CONTINUE TO GET K = 7 GOOD. 
 % remove C3, it was not sig. 
@@ -108,17 +111,30 @@ C = [1 0 1]
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
-
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
 %%
-% add a2
-A(13) = 1
+% add a12 and conv
+A = [1 1 zeros(1,10) 1]
+A = conv(A, [1 zeros(1,35) -1])
 
 inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
 ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
 acf_pacf_norm(ex);
 % How we are super white, and all coeffs are significant. 
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
 
+%% add C36?
+C = [1 0 1 zeros(1,33)]
+
+
+inputModel = estimateARMA( x_input', A, C, 'Differentiated input, version 2', noLags );
+ex = filter( inputModel.A, inputModel.C, x_input' ); ex(length(A):end);
+acf_pacf_norm(ex);
+% How we are super white, and all coeffs are significant. 
+set(gcf, 'Position', [figX, figY, figSize(1), figSize(2)]);
+% Still white
+%% rem a39 and a42
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create the BJ model.
@@ -323,4 +339,3 @@ checkIfNormal( acfEst(k+1:end), 'ACF' );
 
 
 %%
-
